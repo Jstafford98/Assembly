@@ -52,29 +52,33 @@ CHIP ALU {
         ng; // 1 if out<0, 0 otherwise
 
     PARTS:
+        //X Logic
         Mux16(a=x,b[0..15]=false,sel=zx,out=zdx) ; //Zero X Bit
         Not16(in=zdx,out=notx) ; //Not of X
-
         Mux16(a=zdx,b=notx,sel=nx,out=ndx) ; //Chooses either x or notx
-
+        
+        //Y Logic
         Mux16(a=y,b[0..15]=false,sel=zy,out=zdy) ; //Zero Y Bit
         Not16(in=zdy,out=noty) ; //Not of Y
-
         Mux16(a=zdy,b=noty,sel=ny,out=ndy) ; //Choose either y or noty
 
+        //Arithmetic Selection
         Add16(a=ndx,b=ndy,out = xplusy) ; // x+y
-        Add16(a=ndx,b=ndy,out = xandy) ; // x&y
-
+        And16(a=ndx,b=ndy,out = xandy) ; // x&y
         Mux16(a=xandy,b=xplusy,sel=f,out=fxy) ; //Choose either addition or anding
+        Not16(in=fxy,out=nfxy) ; //Not the output of our addition or anding selection
+        Mux16(a=fxy,b=nfxy,sel=no,out[0..7]=out1,out[8..15]=out2,out=oo) ; //Choose from the not of addition ro anding selection or result of our addition or anding selection
 
-        Not16(in=fxy,out=nfxy) ; //Not the output or not
-        Mux16(a=fxy,b=nfxy,sel=no,out=oo) ; //Choose from above
-
-        Or16Way(in=oo,out=o) ; //For xr
+        //ZR Logic
+        Or8Way(in=out1,out = one) ;
+        Or8Way(in=out2,out = two) ;
+        Or(a=one,b=two,out=o) ;
         Not(in=o,out=zr) ;
 
-        And16(a[0..15] = true,b=oo,out[15]=ng,out[0..14] =drop) ; //ng
+        //NG Logic
+        And16(a[0..15] = true,b=oo,out[15]=ng,out[0..14] =drop) ; 
 
-        Or16(a=oo,b[0..15]=false,out=out) ; //output
+        //Output
+        Or16(a=oo,b[0..15]=false,out=out) ; 
 
 }
